@@ -1,0 +1,6 @@
+# Declarative backend registry.
+[backends.default]
+implementation = "placeholder"
+
+[backends.research]
+implementation = "placeholder"

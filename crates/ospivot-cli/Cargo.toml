@@ -1,0 +1,8 @@
+[package]
+name = "ospivot-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ospivot-core = { path = "../ospivot-core" }
+anyhow = "1.0"

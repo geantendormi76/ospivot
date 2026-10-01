@@ -1,0 +1,11 @@
+{
+  "name": "ospivot-workspace",
+  "private": true,
+  "scripts": {
+    "desktop:dev": "pnpm --dir apps tauri dev",
+    "desktop:build": "pnpm --dir apps tauri build",
+    "node:typecheck": "pnpm --dir node typecheck",
+    "node:test": "pnpm --dir node test",
+    "node:build": "pnpm --dir node build"
+  }
+}

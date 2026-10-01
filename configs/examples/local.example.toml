@@ -1,0 +1,8 @@
+# Copy this file into configs/local/ and customize locally.
+# Do not place API keys or passwords in tracked config files.
+
+[runtime]
+# backend = "your-local-backend"
+
+[paths]
+# models = "D:/AI/models"

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ospivot configuration",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "object"
+    },
+    "paths": {
+      "type": "object"
+    },
+    "runtime": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

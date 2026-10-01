@@ -1,0 +1,16 @@
+[project]
+name = "ospivot"
+version = "0.1.0"
+profile = "bare-metal"
+description = "Zero-USB in-place bare-metal OS transition engine"
+
+[system.facts]
+arch = "x86_64"
+firmware = "UEFI"
+default_boot_partition_size_mb = 8192
+boot_partition_label = "MINT_BOOT"
+filesystem = "FAT32"
+
+[storage.topology]
+target_disk_index = 1
+temp_media_disk_index = 0

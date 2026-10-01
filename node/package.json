@@ -1,0 +1,15 @@
+{
+  "name": "@ospivot/node-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Node.js and TypeScript workspace for Agent harnesses, extensions and tooling",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter "./packages/*" build",
+    "typecheck": "pnpm --filter "./packages/*" typecheck",
+    "test": "pnpm --filter "./packages/*" test"
+  }
+}

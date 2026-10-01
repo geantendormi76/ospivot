@@ -1,0 +1,19 @@
+[project]
+name = "ospivot-workspace"
+version = "0.1.0"
+description = "Python AI workspace for ospivot"
+requires-python = ">=3.11,<3.14"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.12",
+    "mypy>=1.17",
+]

@@ -1,0 +1,15 @@
+[project]
+name = "ospivot-core"
+version = "0.1.0"
+description = "Core Python contracts and orchestration primitives"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "pydantic>=2",
+]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13"]
+build-backend = "uv_build"

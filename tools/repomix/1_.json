@@ -1,0 +1,67 @@
+{
+    "$schema": "https://repomix.com/schemas/latest/schema.json",
+    "input": {
+        "maxFileSize": 2000000
+    },
+    "output": {
+        "filePath": "tmp/repomix/project-handoff.xml",
+        "filePathStyle": "target-relative",
+        "style": "xml",
+        "compress": false,
+        "patterns": [
+            { "pattern": "**/tests/**/*", "compress": true },
+            { "pattern": "**/test_*.py", "compress": true },
+            { "pattern": "node/**/tests/**/*", "compress": true },
+            { "pattern": "python/packages/**/*" },
+            { "pattern": "crates/**/*" },
+            { "pattern": "node/packages/**/*" },
+            { "pattern": "apps/**/*" },
+            { "pattern": "configs/**/*" },
+            { "pattern": "HANDOFF.md" },
+            { "pattern": "docs/ai/*.md" }
+        ],
+        "headerText": "本文件是当前项目跨会话工程交接包 (分层骨架优化版)。Rust/Python/Node 核心源码保留完整实现。",
+        "fileSummary": true,
+        "directoryStructure": true,
+        "includeFullDirectoryStructure": true,
+        "includeEmptyDirectories": false,
+        "files": true,
+        "removeComments": false,
+        "removeEmptyLines": true,
+        "showLineNumbers": false,
+        "truncateBase64": true
+    },
+    "include": [
+        "HANDOFF.md",
+        "README.md",
+        "Cargo.toml",
+        "package.json",
+        "pnpm-workspace.yaml",
+        "crates/**/*",
+        "python/**/*",
+        "node/**/*",
+        "apps/**/*",
+        "configs/**/*",
+        "docs/ai/*.md"
+    ],
+    "ignore": {
+        "useGitignore": true,
+        "useDotIgnore": true,
+        "useDefaultPatterns": true,
+        "customPatterns": [
+            "tmp/**",
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/target/**",
+            "**/.venv/**",
+            "models/**",
+            "data/**"
+        ]
+    },
+    "security": {
+        "enableSecurityCheck": true
+    },
+    "tokenCount": {
+        "encoding": "o200k_base"
+    }
+}

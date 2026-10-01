@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OSPivot Transition Configuration Schema",
+  "type": "object",
+  "required": ["source", "target", "storage"],
+  "properties": {
+    "source": {
+      "type": "object",
+      "required": ["os"],
+      "properties": {
+        "os": { "type": "string", "enum": ["windows", "linux"] }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": ["os", "flavor", "iso_path"],
+      "properties": {
+        "os": { "type": "string", "enum": ["windows", "linux"] },
+        "flavor": { "type": "string" },
+        "iso_path": { "type": "string", "minLength": 3 }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "required": ["target_disk_id", "scratch_disk_id", "scratch_size_mb", "boot_label"],
+      "properties": {
+        "target_disk_id": { "type": "integer" },
+        "scratch_disk_id": { "type": "integer" },
+        "scratch_size_mb": { "type": "integer", "minimum": 4096 },
+        "boot_label": { "type": "string", "maxLength": 11 }
+      }
+    }
+  },
+  "additionalProperties": false
+}

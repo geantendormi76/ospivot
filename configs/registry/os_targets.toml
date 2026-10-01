@@ -1,0 +1,16 @@
+[targets.linux_mint_22_3]
+name = "Linux Mint 22.3 Cinnamon 64-bit"
+family = "debian-ubuntu"
+iso_pattern = "linuxmint-22.3-*.iso"
+uefi_bootloader = "EFI/BOOT/BOOTX64.EFI"
+kernel_path = "casper/vmlinuz"
+initrd_path = "casper/initrd.lz"
+live_medium_type = "squashfs"
+
+[targets.windows_11]
+name = "Windows 11 64-bit"
+family = "nt"
+iso_pattern = "Win11_*.iso"
+uefi_bootloader = "efi/boot/bootx64.efi"
+wim_path = "sources/install.wim"
+wim_split_required = true
