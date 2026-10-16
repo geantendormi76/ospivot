@@ -19,7 +19,7 @@ os = "windows"
 flavor = "windows-11-25h2-consumer-zhcn"
 
 # 目标 ISO 镜像的绝对物理路径 (请务必确保路径精准存在)
-iso_path = "/media/zhz/数据1/核心开发内容/实用工具/windows系统/zh-cn_windows_11_consumer_editions_version_25h2_updated_june_2026_x64_dvd_2045a41c.iso"
+iso_path = "/home/zhz/zh-cn_windows_11_consumer_editions_version_25h2_updated_june_2026_x64_dvd_2045a41c.iso"
 
 [storage]
 # 最终抹除并安装目标系统的物理磁盘号 (本机: 465GB NVMe, 当前承载 Linux)

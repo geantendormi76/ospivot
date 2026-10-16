@@ -26,6 +26,7 @@ use crate::blackboard::DiskFact;
 use super::PlatformAdapter;
 
 /// FAT32 单文件硬上限 (4 GiB - 1 byte)。超过此大小的文件无法放入 FAT32。
+#[allow(dead_code)]
 const FAT32_MAX_FILE_BYTES: u64 = 4_294_967_295;
 
 /// 固定引导卷挂载点。
@@ -118,6 +119,13 @@ impl LinuxAdapter {
             .as_array()
             .cloned()
             .context("lsblk --json returned no blockdevices array")?;
+        // 严格白名单：只保留物理磁盘，彻底排除 loop 设备及内存盘
+        arr.retain(|d| {
+            let t = d["type"].as_str().unwrap_or("");
+            let name = d["name"].as_str().unwrap_or("");
+            t == "disk" && !name.starts_with("loop") && !name.starts_with("zram")
+        });
+
         // 按设备名升序编号, 保证 0/1/2… 在不同启动间稳定可复现。
         arr.sort_by(|a, b| {
             a["name"].as_str().unwrap_or("").cmp(b["name"].as_str().unwrap_or(""))
@@ -297,61 +305,6 @@ impl LinuxAdapter {
             "cp", "-a", iso_path.to_str().unwrap(), tmp.to_str().unwrap(),
         ])?;
         Ok(tmp)
-    }
-
-    /// 若 dest/sources/install.wim 超过 FAT32 上限，用 wimlib-imagex 拆为 install.swm*。
-    fn split_large_wim(dest: &str) -> Result<()> {
-        let wim = Path::new(dest).join("sources").join("install.wim");
-        let meta = match std::fs::metadata(&wim) {
-            Ok(m) => m,
-            Err(_) => return Ok(()), // 无 install.wim (非 Windows ISO)，跳过
-        };
-        let size = meta.len();
-        if size <= FAT32_MAX_FILE_BYTES {
-            println!("  [WIM] install.wim {} MB <= 4GB, 无需分卷", size / 1024 / 1024);
-            return Ok(());
-        }
-
-        println!(
-            "  [WIM] install.wim {} MB > 4GB (FAT32 单文件上限)，需拆分为 .swm 分卷",
-            size / 1024 / 1024
-        );
-
-        // 确保 wimlib-imagex 可用；缺失则尝试自动安装 (需 root)。
-        if Command::new("wimlib-imagex").arg("--version").output().is_err() {
-            println!("  [WIM] wimlib-imagex 缺失，尝试 apt 安装 wimtools...");
-            let _ = Self::run_root(&["apt-get", "update"]);
-            let _ = Self::run_root(&["apt-get", "install", "-y", "wimtools"]);
-            if Command::new("wimlib-imagex").arg("--version").output().is_err() {
-                bail!(
-                    "缺少 wimlib-imagex (wimtools 包)。请手动执行: sudo apt-get install -y wimtools 后重跑。"
-                );
-            }
-        }
-
-        let chunk = "3800"; // 每卷 3800 MB < 4GiB FAT32 上限
-        let swm_prefix = Path::new(dest).join("sources").join("install.swm1");
-        let swm_prefix_str = swm_prefix.to_str().unwrap();
-        println!(
-            "  [WIM] 执行 wimlib-imagex split -> install.swm1 (chunk {} MB)",
-            chunk
-        );
-        Self::run_root(&[
-            "wimlib-imagex",
-            "split",
-            wim.to_str().unwrap(),
-            swm_prefix_str,
-            "--compress",
-            "none",
-            "-s",
-            chunk,
-        ])
-        .context("wimlib-imagex split 失败")?;
-
-        // 删除原始 install.wim (Windows Setup 会读 install.swm*)。
-        let _ = std::fs::remove_file(&wim);
-        println!("  [WIM] 已删除 install.wim，分卷 install.swm* 已就绪");
-        Ok(())
     }
 
     /// best-effort: 将引导卷注册为 UEFI NVRAM 启动项。
@@ -594,25 +547,67 @@ impl PlatformAdapter for LinuxAdapter {
     fn sync_boot_assets(&self, iso_path: &Path, target_drive: &Path) -> Result<()> {
         let iso = iso_path.to_str().context("invalid iso path")?;
         let dest = target_drive.to_str().context("invalid target drive path")?;
-
         std::fs::create_dir_all(ISO_MOUNT)?;
-
-        // 1) loopback 只读挂载 ISO。
+        
         println!("[LINUX ENGINE] Loopback mounting ISO (ro)...");
         Self::run_root(&["mount", "-o", "loop,ro", iso, ISO_MOUNT])
             .with_context(|| format!("ISO 挂载失败: {}", iso))?;
 
-        // 2) 流式克隆全部文件到引导卷。
-        println!("[LINUX ENGINE] rsyncing assets into boot volume...");
-        // run_root 在 rsync 非零退出时会自动 bail。
-        let _ = Self::run_root(&["rsync", "-a", "--delete", &format!("{}/", ISO_MOUNT), dest]);
+        let iso_wim = Path::new(ISO_MOUNT).join("sources").join("install.wim");
+        if iso_wim.exists() {
+            println!("[LINUX ENGINE] 识别为 Windows 镜像，执行分层克隆流水线...");
+            
+            println!("  [RSYNC] 克隆引导框架 (排除 install.wim)...");
+            Self::run_root(&[
+                "rsync", "-rt", "--delete", "--no-owner", "--no-group", "--no-perms",
+                "--exclude=sources/install.wim",
+                "--exclude=sources/install.esd",
+                &format!("{}/", ISO_MOUNT),
+                dest,
+            ]).context("rsync 基础引导文件失败")?;
 
-        // 3) Windows 专属: install.wim > 4GiB 时分卷为 .swm (FAT32 单文件上限)。
-        Self::split_large_wim(dest)?;
+            let meta = std::fs::metadata(&iso_wim).context("读取 ISO 中 install.wim 元数据失败")?;
+            let size = meta.len();
+            let dest_sources = Path::new(dest).join("sources");
+            std::fs::create_dir_all(&dest_sources)?;
 
-        // 4) 卸载 ISO。
+            if Command::new("wimlib-imagex").arg("--version").output().is_err() {
+                println!("  [WIM] 正在安装 wimtools...");
+                let _ = Self::run_root(&["apt-get", "update"]);
+                let _ = Self::run_root(&["apt-get", "install", "-y", "wimtools"]);
+            }
+
+            let chunk = "3800";
+            let swm_target = dest_sources.join("install.swm");
+            if size > FAT32_MAX_FILE_BYTES {
+                println!(
+                    "  [WIM] install.wim ({} MB) > 4GB (FAT32单文件硬上限)，正在源端切片分卷写入 {} (chunk {} MB)...",
+                    size / 1024 / 1024,
+                    swm_target.display(),
+                    chunk
+                );
+            }
+
+            Self::run_root(&[
+                "wimlib-imagex",
+                "split",
+                iso_wim.to_str().unwrap(),
+                swm_target.to_str().unwrap(),
+                chunk,
+                "--check",
+            ]).context("wimlib-imagex split 切片执行失败")?;
+
+            if !swm_target.exists() {
+                bail!("分卷切片断言失败：未能检测到关键引导资产 {}", swm_target.display());
+            }
+            println!("  [WIM] ✅ 微软标准分卷镜像 install.swm 切片校验通过！");
+        } else {
+            println!("[LINUX ENGINE] 克隆全量资产到引导卷...");
+            Self::run_root(&["rsync", "-rt", "--delete", "--no-owner", "--no-group", "--no-perms", &format!("{}/", ISO_MOUNT), dest])
+                .context("rsync 资产同步失败")?;
+        }
+
         let _ = Self::run_root(&["umount", ISO_MOUNT]);
-
         Ok(())
     }
 
