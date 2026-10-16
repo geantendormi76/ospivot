@@ -1,6 +1,6 @@
 # 🛡️ OSPivot 工程交接与状态记录 (HANDOFF.md)
 
-> **当前工程状态**：`M1 (Windows -> Linux Mint 原地自举) 验收通过 | 状态: ARMED`  
+> **当前工程状态**：`M2 (Linux -> Windows 原地自举) 验收通过 | 状态: ARMED`  
 > **交接时间**：2026-10-01  
 > **架构基底**：100% Rust 跨平台驱动 (`crates/`) + 声明式契约驱动 (`configs/`) + 黑板模式 (`artifacts/`)
 

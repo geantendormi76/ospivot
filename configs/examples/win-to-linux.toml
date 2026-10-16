@@ -1,0 +1,27 @@
+# ==============================================================================
+# OSPivot 声明式转换任务配置文件 (Declarative Transition Manifest)
+# 规范要求：严禁在代码中写死或盲目遍历搜索！所有运行参数统一由此文件显式注入！
+# ==============================================================================
+
+[source]
+# 当前系统环境 (运行平台): "windows" 或 "linux"
+os = "windows"
+
+[target]
+# 拟安装的目标操作系统: "linux" 或 "windows"
+os = "linux"
+flavor = "linux-mint-22.3-cinnamon"
+
+# 目标 ISO 镜像的绝对物理路径 (请务必确保路径精准存在)
+iso_path = "C:/dev/linuxmint-22.3-cinnamon-64bit.iso"
+
+[storage]
+# 最终抹除并安装目标系统的物理磁盘号 (500GB NVMe 固态)
+target_disk_id = 1
+
+# 临时划分 8GB FAT32 虚拟引导介质的物理磁盘号 (1TB WDC 机械盘)
+scratch_disk_id = 0
+
+# 临时引导分区大小 (MB) 与 FAT32 卷标
+scratch_size_mb = 8192
+boot_label = "MINT_BOOT"

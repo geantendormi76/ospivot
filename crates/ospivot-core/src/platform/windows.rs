@@ -161,4 +161,17 @@ impl PlatformAdapter for WindowsAdapter {
         }
         Ok(())
     }
+
+    fn estimate_iso_size_mb(&self, iso_path: &Path) -> Result<u64> {
+        // 与 LinuxAdapter 对称: 优先使用 7z 读取 ISO 解压后总体积。
+        // 7z 不可用时返回 0 (跳过校验; Linux 发行版 ISO 通常 < 8GB, 默认引导卷足够)。
+        let iso = iso_path.to_str().unwrap_or("");
+        let out = match self.run_powershell_raw(&format!(
+            r#"$r = & 7z l -slt "{iso}" 2>$null; ($r | Where-Object {{ $_ -like 'TotalSize=*' }} | ForEach-Object {{ $_ -split '=' | Select-Object -Last 1 }}) | Select-Object -First 1"#
+        )) {
+            Ok(v) if !v.is_empty() => v.parse::<u64>().unwrap_or(0) / 1024 / 1024,
+            _ => 0,
+        };
+        Ok(out)
+    }
 }

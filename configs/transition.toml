@@ -1,27 +1,37 @@
 # ==============================================================================
 # OSPivot 声明式转换任务配置文件 (Declarative Transition Manifest)
-# 规范要求：严禁在代码中写死或盲目遍历搜索！所有运行参数统一由此文件显式注入！
+# -----------------------------------------------------------------------------
+# 当前任务: Linux → Windows (M2 里程碑 / LinuxAdapter)
+# 运行平台: Linux (当前宿主 Linux Mint 22.3 Cinnamon)
+#
+# 规范要求: 严禁在代码中写死或盲目遍历搜索! 所有运行参数统一由此文件显式注入!
+# 磁盘编号规则: 由 STAGE 1 PROBE 输出, 按设备名升序稳定编号 (nvme0n1=0, sda=1, ...)。
+#   请以 PROBE 打印的实际盘符/型号为准, 不要照抄本文件的示例编号!
 # ==============================================================================
 
 [source]
 # 当前系统环境 (运行平台): "windows" 或 "linux"
-os = "windows"
+os = "linux"
 
 [target]
 # 拟安装的目标操作系统: "linux" 或 "windows"
-os = "linux"
-flavor = "linux-mint-22.3-cinnamon"
+os = "windows"
+flavor = "windows-11-25h2-consumer-zhcn"
 
 # 目标 ISO 镜像的绝对物理路径 (请务必确保路径精准存在)
-iso_path = "C:/dev/linuxmint-22.3-cinnamon-64bit.iso"
+iso_path = "/media/zhz/数据1/核心开发内容/实用工具/windows系统/zh-cn_windows_11_consumer_editions_version_25h2_updated_june_2026_x64_dvd_2045a41c.iso"
 
 [storage]
-# 最终抹除并安装目标系统的物理磁盘号 (500GB NVMe 固态)
-target_disk_id = 1
+# 最终抹除并安装目标系统的物理磁盘号 (本机: 465GB NVMe, 当前承载 Linux)
+# ⚠️ 安装后该盘将被 Windows 安装器全盘格式化, 数据务必提前备份!
+target_disk_id = 0
 
-# 临时划分 8GB FAT32 虚拟引导介质的物理磁盘号 (1TB WDC 机械盘)
-scratch_disk_id = 0
+# 临时划分 FAT32 虚拟引导介质的物理磁盘号 (本机: 931GB NTFS「数据」盘)
+# 该分区末尾将被非破坏性缩容, 腾出空间做引导卷, 原数据 100% 保留。
+scratch_disk_id = 1
 
-# 临时引导分区大小 (MB) 与 FAT32 卷标
-scratch_size_mb = 8192
-boot_label = "MINT_BOOT"
+# 临时引导分区大小 (MB) 与 FAT32 卷标。
+# Windows ISO 解压后约 8GB+, install.wim 7.2GB 须拆分 .swm。
+# split 期间需同时容纳 install.wim + install.swm (峰值 ~15.4GB), 故放大至 24GB 留余量。
+scratch_size_mb = 24576
+boot_label = "WIN_BOOT"
