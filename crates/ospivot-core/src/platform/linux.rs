@@ -516,7 +516,7 @@ impl PlatformAdapter for LinuxAdapter {
         .context("parted mkpart 失败")?;
         Self::run_root(&[
             "parted", "-s", &dev, "unit", "MiB", "set",
-            &new_part_num.to_string(), "esp", "on",
+            &new_part_num.to_string(), "msftdata", "on",
         ])
         .context("parted set esp 失败")?;
 
